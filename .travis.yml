@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t skamer/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run skamer/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t skamer/multi-client ./client
+  - docker build -t skamer/multi-nginx ./nginx
+  - docker build -t skamer/multi-server ./server
+  - docker build -t skamer/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those image and push them to docker hub
+  - docker push skamer/multi-client
+  - docker push skamer/multi-nginx
+  - docker push skamer/multi-server
+  - docker push skamer/multi-worker
